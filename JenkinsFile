@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Définir les variables d'environnement pour SonarQube et les autres outils si nécessaire
-        SONARQUBE_URL = 'http://197.140.142.82:9000'
+        SONARQUBE_URL = 'http://localhost:9000/projects'
         SONARQUBE_TOKEN = 'token'
         MAVEN_REPO_URL = 'https://mymavenrepo.com/repo/wfeEoJVTqyCrSb3fpohC/'
         MAVEN_REPO_USERNAME = 'myMavenRepo'
