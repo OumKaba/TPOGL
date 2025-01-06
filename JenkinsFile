@@ -2,44 +2,43 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_URL = 'http://localhost:9000' // URL de SonarQube
-        SONARQUBE_TOKEN = credentials('sonar-token') // Token d'authentification SonarQube dans Jenkins
-        MAVEN_REPO_URL = 'https://mymavenrepo.com/repository' // URL du dépôt Maven
-        MAVEN_REPO_USERNAME = credentials('maven-repo-username') // Identifiant pour Maven Repo
-        MAVEN_REPO_PASSWORD = credentials('maven-repo-password') // Mot de passe pour Maven Repo
-        SLACK_CHANNEL = '#dev-notifications' // Canal Slack pour les notifications
+        // Définir les variables d'environnement pour SonarQube et les autres outils si nécessaire
+        SONARQUBE_URL = 'http://your-sonarqube-url'
+        SONARQUBE_TOKEN = 'your-sonarqube-token'
+        MAVEN_REPO_URL = 'https://mymavenrepo.com/repo/wfeEoJVTqyCrSb3fpohC/'
+        MAVEN_REPO_USERNAME = 'myMavenRepo'
+        MAVEN_REPO_PASSWORD = '12345678'
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                // Vérifie le code depuis le dépôt Git
+                checkout scm
+            }
+        }
 
         stage('Test') {
             steps {
+                // Exécuter les tests
                 script {
-                    // Lancer les tests unitaires
-                    echo 'Lancement des tests unitaires...'
-                    sh 'mvn clean test'
-
-                    // Archivage des résultats des tests unitaires
-                    echo 'Archivage des résultats des tests unitaires...'
-                    junit '**/target/test-*.xml' // Archivage des résultats JUnit
-
-                    // Génération des rapports Cucumber
-                    echo 'Génération des rapports Cucumber...'
-                    cucumber '**/target/cucumber-reports/*.json' // Archivage des rapports Cucumber
+                    // Si vous utilisez JUnit ou un autre framework de test
+                    sh './gradlew test'
+                }
+            }
+            post {
+                always {
+                    // Archiver les rapports de tests
+                    junit '**/build/test-logs/*.xml'
                 }
             }
         }
 
-        stage('Code Analysis') {
+        stage('Code Analysis (SonarQube)') {
             steps {
+                // Lancer l'analyse SonarQube
                 script {
-                    // Analyser la qualité du code avec SonarQube
-                    echo 'Analyse de la qualité du code avec SonarQube...'
-                    sh '''
-                        mvn sonar:sonar \
-                            -Dsonar.host.url=$SONARQUBE_URL \
-                            -Dsonar.login=$SONARQUBE_TOKEN
-                    '''
+                    sh './gradlew sonarqube -Dsonar.login=${SONARQUBE_TOKEN}'
                 }
             }
         }
@@ -48,15 +47,10 @@ pipeline {
             steps {
                 script {
                     // Vérifier l'état du Quality Gate de SonarQube
-                    echo 'Vérification de l\'état du Quality Gate...'
-                    def qualityGate = sh(script: '''
-                        curl -s -u $SONARQUBE_TOKEN: \
-                        "$SONARQUBE_URL/api/qualitygates/project_status?projectKey=your_project_key" | \
-                        jq -r .projectStatus.status
-                    ''', returnStdout: true).trim()
-
-                    if (qualityGate != 'OK') {
-                        error "Le Quality Gate a échoué. Le pipeline s'arrête."
+                    def qualityGateStatus = sh(script: './gradlew sonarqube -Dsonar.login=${SONARQUBE_TOKEN} -Dsonar.qualitygate.wait=true', returnStatus: true)
+                    if (qualityGateStatus != 0) {
+                        currentBuild.result = 'FAILURE'
+                        error "Quality Gate failed!"
                     }
                 }
             }
@@ -64,35 +58,25 @@ pipeline {
 
         stage('Build') {
             steps {
+                // Compiler et construire le projet (générer le JAR et la documentation)
                 script {
-                    // Génération du fichier JAR
-                    echo 'Génération du fichier JAR...'
-                    sh 'mvn clean package'
-
-                    // Génération de la documentation
-                    echo 'Génération de la documentation...'
-                    sh 'mvn javadoc:javadoc'
-
+                    sh './gradlew build generateJavadoc'
+                }
+            }
+            post {
+                success {
                     // Archivage du fichier JAR et de la documentation
-                    echo 'Archivage du fichier JAR et de la documentation...'
-                    archiveArtifacts artifacts: '**/target/*.jar, **/target/site/apidocs/**', allowEmptyArchive: true
+                    archiveArtifacts artifacts: '**/build/libs/*.jar', allowEmptyArchive: true
+                    archiveArtifacts artifacts: '**/build/docs/javadoc/**/*', allowEmptyArchive: true
                 }
             }
         }
 
         stage('Deploy') {
             steps {
+                // Déployer le fichier JAR dans le dépôt Maven
                 script {
-                    // Déploiement du fichier JAR dans le dépôt Maven
-                    echo 'Déploiement du fichier JAR...'
-                    sh '''
-                        mvn deploy:deploy-file \
-                            -Dfile=target/your-app.jar \
-                            -DrepositoryId=mymavenrepo \
-                            -Durl=$MAVEN_REPO_URL \
-                            -Dusername=$MAVEN_REPO_USERNAME \
-                            -Dpassword=$MAVEN_REPO_PASSWORD
-                    '''
+                    sh './gradlew publish'
                 }
             }
         }
@@ -100,19 +84,11 @@ pipeline {
         stage('Notification') {
             steps {
                 script {
-                    // Vérification de l'état du pipeline pour l'envoi des notifications
-                    if (currentBuild.result == 'SUCCESS') {
-                        echo 'Envoi d\'une notification de succès...'
-                        slackSend(channel: SLACK_CHANNEL, message: "Le pipeline a réussi ! Déploiement effectué avec succès.")
-                    } else {
-                        echo 'Envoi d\'une notification d\'échec...'
-                        slackSend(channel: SLACK_CHANNEL, message: "Le pipeline a échoué. Vérifiez les logs.")
-                    }
+                    // Envoyer des notifications Slack
+                    slackSend (channel: '#your-channel', message: "Build and deploy completed successfully. Version: ${env.BUILD_TAG}")
 
-                    // Envoi d'un e-mail en cas d'échec ou de succès
-                    mail to: 'team@example.com',
-                         subject: "Pipeline - ${currentBuild.result}",
-                         body: "Le pipeline a terminé avec le résultat : ${currentBuild.result}."
+                    // Envoyer un email en cas de succès
+                    mail to: 'your-email@example.com', subject: "Build Success", body: "The build and deployment have been successfully completed!"
                 }
             }
         }
@@ -120,18 +96,11 @@ pipeline {
 
     post {
         failure {
-            echo 'Le pipeline a échoué, envoi des notifications d\'échec.'
-            slackSend(channel: SLACK_CHANNEL, message: "Le pipeline a échoué !")
-            mail to: 'team@example.com',
-                 subject: "Pipeline Failure",
-                 body: "Le pipeline a échoué. Veuillez vérifier les logs."
-        }
-        success {
-            echo 'Le pipeline a réussi, envoi des notifications de succès.'
-            slackSend(channel: SLACK_CHANNEL, message: "Le pipeline a réussi ! Déploiement effectué avec succès.")
-            mail to: 'team@example.com',
-                 subject: "Pipeline Success",
-                 body: "Le pipeline a été exécuté avec succès."
+            // Envoyer une notification Slack en cas d'échec
+            slackSend (channel: '#your-channel', message: "Build or deploy failed. Please check the logs.")
+
+            // Envoyer un email en cas d'échec
+            mail to: 'your-email@example.com', subject: "Build Failure", body: "The build or deployment has failed. Please check the Jenkins logs for details."
         }
     }
 }
