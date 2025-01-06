@@ -1,0 +1,137 @@
+pipeline {
+    agent any
+
+    environment {
+        SONARQUBE_URL = 'http://localhost:9000' // URL de SonarQube
+        SONARQUBE_TOKEN = credentials('sonar-token') // Token d'authentification SonarQube dans Jenkins
+        MAVEN_REPO_URL = 'https://mymavenrepo.com/repository' // URL du dépôt Maven
+        MAVEN_REPO_USERNAME = credentials('maven-repo-username') // Identifiant pour Maven Repo
+        MAVEN_REPO_PASSWORD = credentials('maven-repo-password') // Mot de passe pour Maven Repo
+        SLACK_CHANNEL = '#dev-notifications' // Canal Slack pour les notifications
+    }
+
+    stages {
+
+        stage('Test') {
+            steps {
+                script {
+                    // Lancer les tests unitaires
+                    echo 'Lancement des tests unitaires...'
+                    sh 'mvn clean test'
+
+                    // Archivage des résultats des tests unitaires
+                    echo 'Archivage des résultats des tests unitaires...'
+                    junit '**/target/test-*.xml' // Archivage des résultats JUnit
+
+                    // Génération des rapports Cucumber
+                    echo 'Génération des rapports Cucumber...'
+                    cucumber '**/target/cucumber-reports/*.json' // Archivage des rapports Cucumber
+                }
+            }
+        }
+
+        stage('Code Analysis') {
+            steps {
+                script {
+                    // Analyser la qualité du code avec SonarQube
+                    echo 'Analyse de la qualité du code avec SonarQube...'
+                    sh '''
+                        mvn sonar:sonar \
+                            -Dsonar.host.url=$SONARQUBE_URL \
+                            -Dsonar.login=$SONARQUBE_TOKEN
+                    '''
+                }
+            }
+        }
+
+        stage('Code Quality') {
+            steps {
+                script {
+                    // Vérifier l'état du Quality Gate de SonarQube
+                    echo 'Vérification de l\'état du Quality Gate...'
+                    def qualityGate = sh(script: '''
+                        curl -s -u $SONARQUBE_TOKEN: \
+                        "$SONARQUBE_URL/api/qualitygates/project_status?projectKey=your_project_key" | \
+                        jq -r .projectStatus.status
+                    ''', returnStdout: true).trim()
+
+                    if (qualityGate != 'OK') {
+                        error "Le Quality Gate a échoué. Le pipeline s'arrête."
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    // Génération du fichier JAR
+                    echo 'Génération du fichier JAR...'
+                    sh 'mvn clean package'
+
+                    // Génération de la documentation
+                    echo 'Génération de la documentation...'
+                    sh 'mvn javadoc:javadoc'
+
+                    // Archivage du fichier JAR et de la documentation
+                    echo 'Archivage du fichier JAR et de la documentation...'
+                    archiveArtifacts artifacts: '**/target/*.jar, **/target/site/apidocs/**', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    // Déploiement du fichier JAR dans le dépôt Maven
+                    echo 'Déploiement du fichier JAR...'
+                    sh '''
+                        mvn deploy:deploy-file \
+                            -Dfile=target/your-app.jar \
+                            -DrepositoryId=mymavenrepo \
+                            -Durl=$MAVEN_REPO_URL \
+                            -Dusername=$MAVEN_REPO_USERNAME \
+                            -Dpassword=$MAVEN_REPO_PASSWORD
+                    '''
+                }
+            }
+        }
+
+        stage('Notification') {
+            steps {
+                script {
+                    // Vérification de l'état du pipeline pour l'envoi des notifications
+                    if (currentBuild.result == 'SUCCESS') {
+                        echo 'Envoi d\'une notification de succès...'
+                        slackSend(channel: SLACK_CHANNEL, message: "Le pipeline a réussi ! Déploiement effectué avec succès.")
+                    } else {
+                        echo 'Envoi d\'une notification d\'échec...'
+                        slackSend(channel: SLACK_CHANNEL, message: "Le pipeline a échoué. Vérifiez les logs.")
+                    }
+
+                    // Envoi d'un e-mail en cas d'échec ou de succès
+                    mail to: 'team@example.com',
+                         subject: "Pipeline - ${currentBuild.result}",
+                         body: "Le pipeline a terminé avec le résultat : ${currentBuild.result}."
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo 'Le pipeline a échoué, envoi des notifications d\'échec.'
+            slackSend(channel: SLACK_CHANNEL, message: "Le pipeline a échoué !")
+            mail to: 'team@example.com',
+                 subject: "Pipeline Failure",
+                 body: "Le pipeline a échoué. Veuillez vérifier les logs."
+        }
+        success {
+            echo 'Le pipeline a réussi, envoi des notifications de succès.'
+            slackSend(channel: SLACK_CHANNEL, message: "Le pipeline a réussi ! Déploiement effectué avec succès.")
+            mail to: 'team@example.com',
+                 subject: "Pipeline Success",
+                 body: "Le pipeline a été exécuté avec succès."
+        }
+    }
+}
