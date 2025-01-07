@@ -92,7 +92,7 @@ slack {
     }
 
     buildSuccessful {
-        webHook = "https://hooks.slack.com/services/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"
+        webHook = "https://hooks.slack.com/services/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"
         attachment {
             fallback = "Project successfully built."
             pretext = "Project successfully built."
