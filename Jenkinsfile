@@ -1,25 +1,32 @@
 pipeline {
-    agent any
+    agent any  // Utiliser n'importe quel agent disponible
 
     environment {
-        JAVA_HOME = tool 'JDK 11'
-        GRADLE_HOME = tool 'Gradle 8.8'
-        PATH = "${GRADLE_HOME}/bin:${JAVA_HOME}/bin:${env.PATH}"
+        // Définition des variables d'environnement si nécessaire
+        SMTP_HOST = 'smtp.gmail.com'
+        SMTP_PORT = '587'
+        USERNAME = 'lo_kaba@esi.dz'
+        PASSWORD = 'msvh ybei sfjf jjlb'  // Assurez-vous de sécuriser les identifiants
+        FROM_EMAIL = 'lo_kaba@esi.dz'
+        TO_EMAIL = 'lr_soltani@esi.dz'
+        EMAIL_SUBJECT = 'Notification Mail'
+        EMAIL_BODY = 'Hello!! This is the last update'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo "Checking out the source code..."
-                checkout scm
+                script {
+                    // Récupérer le code source du dépôt
+                    git 'https://github.com/OumKaba/TPOGL'
+                }
             }
         }
 
         stage('Build') {
             steps {
-                echo "Building the project..."
                 script {
-                    // Utilisez bat pour exécuter Gradle sous Windows
+                    // Exécution de la tâche Gradle pour la construction sous Windows
                     bat './gradlew.bat build'
                 }
             }
@@ -27,9 +34,8 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo "Running tests..."
                 script {
-                    // Utilisez bat pour exécuter Gradle sous Windows
+                    // Exécution des tests via Gradle
                     bat './gradlew.bat test'
                 }
             }
@@ -37,31 +43,19 @@ pipeline {
 
         stage('Publish') {
             steps {
-                echo "Publishing the build..."
                 script {
-                    // Publier le build ou effectuer des actions supplémentaires comme l'envoi de mails ou notification
+                    // Publication du code via Gradle
                     bat './gradlew.bat publish'
                 }
             }
         }
 
-        stage('Notify Success') {
+        stage('Send Email') {
             steps {
-                echo "Sending success notifications..."
                 script {
-                    // Exemple d'envoi d'email ou notification
-                    bat './gradlew.bat sendMailCustom'
-                }
-            }
-        }
-
-        stage('Post Build') {
-            steps {
-                echo "Post Build Actions..."
-                script {
-                    // Actions supplémentaires post-build
-                    // Exemple : notification Slack (commenté par défaut ici)
-                    // bat './gradlew.bat postPublishedPluginToSlack'
+                    // Configuration et envoi du mail
+                    echo "Sending email..."
+                    sendEmail()
                 }
             }
         }
@@ -71,14 +65,41 @@ pipeline {
         success {
             echo 'Build was successful!'
         }
-
         failure {
             echo 'Build failed. Please check the logs.'
         }
-
         always {
-            echo 'Cleaning up...'
-            cleanWs()
+            cleanWs()  // Nettoyer l'espace de travail après chaque exécution
         }
+    }
+}
+
+def sendEmail() {
+    // Configuration du serveur SMTP pour l'envoi d'email
+    def props = new Properties()
+    props.put("mail.smtp.auth", "true")
+    props.put("mail.smtp.starttls.enable", "true")
+    props.put("mail.smtp.host", SMTP_HOST)
+    props.put("mail.smtp.port", SMTP_PORT)
+
+    // Création de la session d'authentification
+    def session = javax.mail.Session.getInstance(props, new javax.mail.Authenticator() {
+        @Override
+        protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
+            return new javax.mail.PasswordAuthentication(USERNAME, PASSWORD)
+        }
+    })
+
+    try {
+        // Création du message et envoi
+        def message = new javax.mail.internet.MimeMessage(session)
+        message.setFrom(new javax.mail.internet.InternetAddress(FROM_EMAIL))
+        message.setRecipients(javax.mail.Message.RecipientType.TO, javax.mail.internet.InternetAddress.parse(TO_EMAIL))
+        message.setSubject(EMAIL_SUBJECT)
+        message.setText(EMAIL_BODY)
+        javax.mail.Transport.send(message)
+        echo "Email sent successfully to: $TO_EMAIL"
+    } catch (Exception e) {
+        echo "Failed to send email: ${e.message}"
     }
 }
