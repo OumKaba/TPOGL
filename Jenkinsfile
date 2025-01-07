@@ -28,6 +28,23 @@ pipeline {
                         }
                     }
                 }
+        stage('Code Quality') {
+                    steps {
+                        script {
+                            // Attendre la fin de l'analyse SonarQube
+                            timeout(time: 1, unit: 'HOURS') {
+                                waitForQualityGate()  // Attend la fin de l'analyse et récupère l'état du Quality Gate
+                            }
+
+                            // Vérifie l'état du Quality Gate
+                            def qualityGateStatus = waitForQualityGate().status
+                            if (qualityGateStatus == 'FAILED') {
+                                error "Le Quality Gate a échoué. Le pipeline est interrompu."
+                            }
+                        }
+                    }
+                }
+
 
         stage('Build') {
             steps {
