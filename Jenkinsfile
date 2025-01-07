@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_URL = 'http://197.140.142.82:9000/'
-        SONARQUBE_TOKEN = 'token'  // Assurez-vous que le token est valide
+        SONARQUBE_TOKEN = 'token'  // Utilisez un token Jenkins configuré dans les paramètres du job si nécessaire
         MAVEN_REPO_URL = 'https://mymavenrepo.com/repo/wfeEoJVTqyCrSb3fpohC/'
         MAVEN_REPO_USERNAME = 'myMavenRepo'
         MAVEN_REPO_PASSWORD = '12345678'
@@ -34,7 +33,7 @@ pipeline {
 
         stage('Code Analysis (SonarQube)') {
             steps {
-                // Lancer l'analyse SonarQube
+                // Lancer l'analyse SonarQube via la configuration Jenkins
                 script {
                     bat './gradlew sonarqube -Dsonar.login=${SONARQUBE_TOKEN}'
                 }
