@@ -45,7 +45,7 @@ pipeline {
                 }
             }
         }
-    }
+
     stage('Notification') {
           steps {
             echo 'Send Notifications To the Team...'
