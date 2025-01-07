@@ -2,6 +2,17 @@ pipeline {
     agent any
 
     stages {
+        stage('Check Environment') {
+            steps {
+                script {
+                    echo "Java Version:"
+                    bat 'java -version'  // Windows
+                    echo "Gradle Version:"
+                    bat './gradlew -v'   // Windows
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -11,7 +22,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    bat './gradlew build'
+                    bat './gradlew build'  // Pour Windows
                 }
             }
         }
