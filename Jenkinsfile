@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Définir les variables d'environnement pour SonarQube et les autres outils si nécessaire
-        SONARQUBE_URL = 'http://localhost:9000/projects'
+        SONARQUBE_URL = 'http://197.140.142.82:9000/'
         SONARQUBE_TOKEN = 'token'
         MAVEN_REPO_URL = 'https://mymavenrepo.com/repo/wfeEoJVTqyCrSb3fpohC/'
         MAVEN_REPO_USERNAME = 'myMavenRepo'
@@ -85,10 +85,10 @@ pipeline {
             steps {
                 script {
                     // Envoyer des notifications Slack
-                    slackSend (channel: '#your-channel', message: "Build and deploy completed successfully. Version: ${env.BUILD_TAG}")
+                    slackSend (channel: '#notification', message: "Build and deploy completed successfully. Version: ${env.BUILD_TAG}")
 
                     // Envoyer un email en cas de succès
-                    mail to: 'your-email@example.com', subject: "Build Success", body: "The build and deployment have been successfully completed!"
+                    mail to: 'lo_kaba@€ei.dz', subject: "Build Success", body: "The build and deployment have been successfully completed!"
                 }
             }
         }
@@ -97,10 +97,10 @@ pipeline {
     post {
         failure {
             // Envoyer une notification Slack en cas d'échec
-            slackSend (channel: '#your-channel', message: "Build or deploy failed. Please check the logs.")
+            slackSend (channel: '#notification', message: "Build or deploy failed. Please check the logs.")
 
             // Envoyer un email en cas d'échec
-            mail to: 'your-email@example.com', subject: "Build Failure", body: "The build or deployment has failed. Please check the Jenkins logs for details."
+            mail to: 'lo_kaba@esi.dz', subject: "Build Failure", body: "The build or deployment has failed. Please check the Jenkins logs for details."
         }
     }
 }
