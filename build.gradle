@@ -160,9 +160,12 @@ postPublishedPluginToSlack {
     }
 }
 */
+/*
 publish {
     finalizedBy  "sendMailCustom"
 }
+/*
+ */
 
 tasks.named('publish').configure {
     finalizedBy 'test'  // Le test est effectué après la publication

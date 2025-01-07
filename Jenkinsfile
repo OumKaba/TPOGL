@@ -31,7 +31,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('Send Email') {
             steps {
                 script {
@@ -41,7 +41,7 @@ pipeline {
             }
         }
     }
-
+*/
     post {
         success {
             echo 'Build was successful!'
