@@ -1,7 +1,10 @@
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
-import sun.security.pkcs11.Session
+import javax.mail.Session
+import javax.mail.Authenticator
+import javax.mail.PasswordAuthentication
+import javax.mail.Transport
 
 plugins {
     id 'java'
@@ -112,8 +115,8 @@ task sendMailCustom {
         // Configuration du serveur SMTP
         String smtpHost = "smtp.gmail.com"
         int smtpPort = 587
-        String username = "lo_kaba@esi.dz"
-        String password = "msvh ybei sfjf jjlb"  // Veuillez sécuriser vos identifiants
+        String username = System.getenv('EMAIL_USERNAME') // Utilisation des variables d'environnement pour sécuriser les identifiants
+        String password = System.getenv('EMAIL_PASSWORD')
         String fromEmail = "lo_kaba@esi.dz"
         String toEmail = "lr_soltani@esi.dz"
         String emailSubject = "Notification Mail"
@@ -137,7 +140,7 @@ task sendMailCustom {
             // Création et envoi du message
             MimeMessage message = new MimeMessage(session)
             message.setFrom(new InternetAddress(fromEmail))
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
+            message.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(toEmail))
             message.setSubject(emailSubject)
             message.setText(emailBody)
 
