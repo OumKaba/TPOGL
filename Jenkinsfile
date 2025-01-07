@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    environment {
+            SONARQUBE = 'sonar'  // Nom de votre serveur configuré dans Jenkins
+        }
+
 
     stages {
         stage('Checkout') {
@@ -15,6 +19,16 @@ pipeline {
                 }
             }
         }
+        stage('SonarQube Analysis') {
+                    steps {
+                        script {
+                            // Lancer l'analyse SonarQube en utilisant le plugin Jenkins SonarQube
+                            withSonarQubeEnv('sonar') {  // Utiliser le serveur SonarQube configuré
+                                bat './gradlew.bat sonarqube'
+                            }
+                        }
+                    }
+                }
 
         stage('Test') {
             steps {
