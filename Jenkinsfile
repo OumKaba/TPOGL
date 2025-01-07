@@ -23,7 +23,7 @@ pipeline {
                 // Exécuter les tests
                 script {
                     // Utilisez 'gradlew.bat' pour Windows
-                    bat './gradlew.bat test'
+                    bat './gradlew test'
                 }
             }
             post {
@@ -38,7 +38,7 @@ pipeline {
             steps {
                 // Lancer l'analyse SonarQube
                 script {
-                    bat './gradlew.bat sonarqube -Dsonar.login=${SONARQUBE_TOKEN}'
+                    bat './gradlew sonarqube -Dsonar.login=${SONARQUBE_TOKEN}'
                 }
             }
         }
@@ -47,7 +47,7 @@ pipeline {
             steps {
                 script {
                     // Vérifier l'état du Quality Gate de SonarQube
-                    def qualityGateStatus = bat(script: './gradlew.bat sonarqube -Dsonar.login=${SONARQUBE_TOKEN} -Dsonar.qualitygate.wait=true', returnStatus: true)
+                    def qualityGateStatus = bat(script: './gradlew sonarqube -Dsonar.login=${SONARQUBE_TOKEN} -Dsonar.qualitygate.wait=true', returnStatus: true)
                     if (qualityGateStatus != 0) {
                         currentBuild.result = 'FAILURE'
                         error "Quality Gate failed!"
@@ -60,7 +60,7 @@ pipeline {
             steps {
                 // Compiler et construire le projet (générer le JAR et la documentation)
                 script {
-                    bat './gradlew.bat build generateJavadoc'
+                    bat './gradlew build generateJavadoc'
                 }
             }
             post {
@@ -76,7 +76,7 @@ pipeline {
             steps {
                 // Déployer le fichier JAR dans le dépôt Maven
                 script {
-                    bat './gradlew.bat publish'
+                    bat './gradlew publish'
                 }
             }
         }
