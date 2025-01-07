@@ -2,7 +2,6 @@ pipeline {
     agent any
     environment {
         SONARQUBE = 'sonar'  // Nom de votre serveur SonarQube configuré dans Jenkins
-        SONAR_TOKEN = credentials('token')  // Utiliser le token configuré dans Jenkins
     }
 
     stages {
@@ -15,7 +14,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    bat './gradlew.bat build'
+                    bat './gradlew build'
                 }
             }
         }
@@ -25,7 +24,7 @@ pipeline {
                 script {
                     // Lancer l'analyse SonarQube en utilisant le plugin Jenkins SonarQube
                     withSonarQubeEnv('sonar') {  // Utiliser l'environnement SonarQube configuré
-                        bat './gradlew.bat sonarqube -Dsonar.login=${SONAR_TOKEN}'  // Passer le token d'authentification
+                        bat './gradlew sonarqube '
                     }
                 }
             }
@@ -34,7 +33,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    bat './gradlew.bat test'
+                    bat './gradlew test'
                 }
             }
         }
@@ -42,21 +41,18 @@ pipeline {
         stage('Publish') {
             steps {
                 script {
-                    bat './gradlew.bat publish'
+                    bat './gradlew publish'
                 }
             }
         }
     }
+    stage('Notification') {
+          steps {
+            echo 'Send Notifications To the Team...'
+            bat './gradlew sendMail -PemailBody="Déploiement terminé"  -PemailTo="ls_yousfi@esi.dz"'
+            bat './gradlew postpublishedPluginToSlack -PslackMessage="Déploiement terminé"'
+          }
+        }
 
-    post {
-        success {
-            echo 'Build was successful!'
-        }
-        failure {
-            echo 'Build failed. Please check the logs.'
-        }
-        always {
-            cleanWs()  // Nettoyer l'espace de travail après chaque exécution
-        }
-    }
+
 }

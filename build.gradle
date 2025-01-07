@@ -6,6 +6,7 @@ import jakarta.mail.Authenticator
 import jakarta.mail.PasswordAuthentication
 import jakarta.mail.Transport
 
+
 plugins {
     id 'java'
     id "jacoco"
@@ -14,6 +15,7 @@ plugins {
     id "maven-publish"
     id "io.github.oleksiiparf.slack-webhook" version "1.0.0"
     id "de.zebrajaeger.sendMail" version "0.2.2"
+
 }
 
 group = 'com.example'
@@ -110,6 +112,53 @@ slack {
     }
 }
 */
+slack {
+    publishedPlugin {
+        webHook = 'https://hooks.slack.com/services/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'
+        /*  attachment {
+              fallback = "New version successfully published."
+              pretext = "New version successfully published."
+              color = "good"
+              /*field {
+                  title = "Module"
+                  value = project.name
+                  shortValue = true
+              }*/
+        /*field {
+            title = "Version"
+            value = project.version
+            shortValue = true
+        }*/
+        //}
+        attachment {
+            // fallback = "Another line on sent together."
+            //pretext = "Another line on sent together."
+            color = "good"
+            field {
+                title = "Message Urgent"
+                value = "Déploiement terminé"
+            }
+        }
+    }
+    builtSucceed {
+        webHook = "https://hooks.slack.com/services/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"
+        attachment {
+            fallback = "Project successfully built."
+            pretext = "Project successfully built."
+            field {
+                title = "Module"
+                value = project.name
+                shortValue = true
+            }
+            field {
+                title = "Version"
+                value = project.version
+                shortValue = true
+            }
+        }
+    }
+}
+
 task sendMailCustom {
     doLast {
         // Configuration du serveur SMTP
