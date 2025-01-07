@@ -159,8 +159,8 @@ slack {
     }
 }
 
-task sendMailCustom {
-    doLast {
+sendMail {
+
         // Configuration du serveur SMTP
         String smtpHost = "smtp.gmail.com"
         int smtpPort = 587
@@ -199,7 +199,7 @@ task sendMailCustom {
             e.printStackTrace()
             println("Échec de l'envoi de l'email : ${e.message}")
         }
-    }
+
 }
 /*
 postPublishedPluginToSlack {
