@@ -159,17 +159,18 @@ slack {
     }
 }
 
-sendMail {
+task sendMailCustom {
+    doLast {
+        // Fetch the properties passed from the command line
+        String emailBody = project.hasProperty('emailBody') ? project.emailBody : 'Default email body'
+        String toEmail = project.hasProperty('emailTo') ? project.emailTo : 'default-email@example.com'
 
-        // Configuration du serveur SMTP
+        // SMTP Configuration (replace with your actual config)
         String smtpHost = "smtp.gmail.com"
         int smtpPort = 587
         String username = "lo_kaba@esi.dz"
-        String password = "msvh ybei sfjf jjlb"  // Veuillez sécuriser vos identifiants
+        String password = "msvh ybei sfjf jjlb"  // Keep this secure!
         String fromEmail = "lo_kaba@esi.dz"
-     //   String toEmail = "lr_soltani@esi.dz"
-       // String emailSubject = "Notification Mail"
-        //String emailBody = "Hello!! this is the last update"
 
         Properties props = new Properties()
         props.put("mail.smtp.auth", "true")
@@ -190,7 +191,7 @@ sendMail {
             MimeMessage message = new MimeMessage(session)
             message.setFrom(new InternetAddress(fromEmail))
             message.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(toEmail))
-            message.setSubject(emailSubject)
+            message.setSubject("Notification Mail")
             message.setText(emailBody)
 
             Transport.send(message)
@@ -199,7 +200,7 @@ sendMail {
             e.printStackTrace()
             println("Échec de l'envoi de l'email : ${e.message}")
         }
-
+    }
 }
 /*
 postPublishedPluginToSlack {

@@ -49,7 +49,7 @@ pipeline {
     stage('Notification') {
           steps {
             echo 'Send Notifications To the Team...'
-            bat './gradlew sendMail -PemailBody="Déploiement terminé"  -PemailTo="lo_kaba@esi.dz"'
+            bat './gradlew sendMailCustom -PemailBody="Déploiement terminé"  -PemailTo="lo_kaba@esi.dz"'
             bat './gradlew postpublishedPluginToSlack -PslackMessage="Déploiement terminé"'
           }
         }
