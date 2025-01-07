@@ -2,8 +2,7 @@ pipeline {
     agent any
     environment {
         SONARQUBE = 'sonar'  // Nom de votre serveur SonarQube configuré dans Jenkins
-        SONAR_PROJECT_NAME = 'oumayma_tp7'  // Nom de votre projet SonarQube
-        SONAR_PROJECT_KEY = 'oumayma_tp7'  // Clé unique de votre projet SonarQube
+        SONAR_TOKEN = credentials('token')  // Utiliser le token configuré dans Jenkins
     }
 
     stages {
@@ -25,8 +24,8 @@ pipeline {
             steps {
                 script {
                     // Lancer l'analyse SonarQube en utilisant le plugin Jenkins SonarQube
-                    withSonarQubeEnv('sonar') {  // Utiliser le serveur SonarQube configuré
-                        bat "./gradlew.bat sonarqube -Dsonar.projectName=${SONAR_PROJECT_NAME} -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
+                    withSonarQubeEnv('sonar') {  // Utiliser l'environnement SonarQube configuré
+                        bat './gradlew.bat sonarqube -Dsonar.login=${SONAR_TOKEN}'  // Passer le token d'authentification
                     }
                 }
             }
@@ -47,17 +46,6 @@ pipeline {
                 }
             }
         }
-
-        /*
-        stage('Send Email') {
-            steps {
-                script {
-                    echo "Sending email..."
-                    sendEmail()
-                }
-            }
-        }
-        */
     }
 
     post {
