@@ -61,7 +61,7 @@ publishing {
         }
     }
 }
-
+/*
 slack {
     publishedPlugin {
         webHook = "https://hooks.slack.com/services/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"
@@ -109,7 +109,7 @@ slack {
         }
     }
 }
-
+*/
 task sendMailCustom {
     doLast {
         // Configuration du serveur SMTP
@@ -152,8 +152,8 @@ task sendMailCustom {
         }
     }
 }
-
-/*task postPublishedPluginToSlack {
+/*
+postPublishedPluginToSlack {
     doLast {
         // Utilisation de Slack pour notifier la publication
         slack.publishedPlugin()
@@ -161,7 +161,7 @@ task sendMailCustom {
 }
 */
 publish {
-    finalizedBy "postPublishedPluginToSlack", "sendMailCustom"
+    finalizedBy  "sendMailCustom"
 }
 
 tasks.named('publish').configure {
