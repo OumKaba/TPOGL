@@ -11,6 +11,24 @@ pipeline {
             }
         }
 
+        stage('Test') {
+                    steps {
+                        script {
+                            bat './gradlew test'
+                        }
+                    }
+                }
+        stage('SonarQube Analysis') {
+                    steps {
+                        script {
+                            // Lancer l'analyse SonarQube en utilisant le plugin Jenkins SonarQube
+                            withSonarQubeEnv('sonar') {  // Utiliser l'environnement SonarQube configuré
+                                bat './gradlew sonarqube '
+                            }
+                        }
+                    }
+                }
+
         stage('Build') {
             steps {
                 script {
@@ -19,24 +37,8 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    // Lancer l'analyse SonarQube en utilisant le plugin Jenkins SonarQube
-                    withSonarQubeEnv('sonar') {  // Utiliser l'environnement SonarQube configuré
-                        bat './gradlew sonarqube '
-                    }
-                }
-            }
-        }
 
-        stage('Test') {
-            steps {
-                script {
-                    bat './gradlew test'
-                }
-            }
-        }
+
 
         stage('Publish') {
             steps {
