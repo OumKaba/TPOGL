@@ -2,6 +2,7 @@ pipeline {
     agent any
     environment {
         SONARQUBE = 'sonar'  // Nom de votre serveur SonarQube configuré dans Jenkins
+        SLACK_CHANNEL = '#notification'  // Remplacez par le canal Slack de votre choix
     }
 
     stages {
@@ -14,14 +15,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Exécution des tests unitaires
                     bat './gradlew test'
-
-                    // Génération des rapports Cucumber après les tests
-                    bat './gradlew generateCucumberReports'
-
-                    // Affichage du rapport Cucumber généré
-                    echo 'Cucumber report generated at: build/reports/cucumber/cucumber-html-reports/overview-features.html'
                 }
             }
         }
@@ -29,8 +23,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Lancer l'analyse SonarQube en utilisant le plugin Jenkins SonarQube
-                    withSonarQubeEnv('sonar') {  // Utiliser l'environnement SonarQube configuré
+                    withSonarQubeEnv('sonar') {
                         bat './gradlew sonarqube'
                     }
                 }
@@ -40,13 +33,10 @@ pipeline {
         stage('Code Quality') {
             steps {
                 script {
-                    // Attendre la fin de l'analyse SonarQube
                     timeout(time: 1, unit: 'HOURS') {
-                        waitForQualityGate()  // Attend la fin de l'analyse et récupère l'état du Quality Gate
+                        waitForQualityGate()  // Attendre la fin de l'analyse SonarQube
                     }
-
-                    // Vérifie l'état du Quality Gate
-                    def qualityGateStatus = currentBuild.result
+                    def qualityGateStatus = waitForQualityGate().status
                     if (qualityGateStatus == 'FAILED') {
                         error "Le Quality Gate a échoué. Le pipeline est interrompu."
                     }
@@ -72,13 +62,16 @@ pipeline {
 
         stage('Notification') {
             steps {
-                echo 'Send Notifications To the Team...'
+                script {
+                    echo 'Envoi de la notification vers Slack...'
 
-                // Envoi d'un email personnalisé après le déploiement
-                bat './gradlew sendMailCustom -PemailBody="Déploiement terminé" -PemailTo="lo_kaba@esi.dz"'
-
-                // Envoi de la notification sur Slack
-                bat './gradlew postpublishedPluginToSlack -PslackMessage="Déploiement terminé"'
+                    // Envoi d'une notification Slack
+                    slackSend (
+                        channel: SLACK_CHANNEL,
+                        message: "Déploiement terminé avec succès ! 🎉",
+                        color: 'good'  // Utilisez 'good' pour vert, 'warning' pour jaune, 'danger' pour rouge
+                    )
+                }
             }
         }
     }
