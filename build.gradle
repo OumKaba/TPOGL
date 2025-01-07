@@ -167,9 +167,9 @@ sendMail {
         String username = "lo_kaba@esi.dz"
         String password = "msvh ybei sfjf jjlb"  // Veuillez sécuriser vos identifiants
         String fromEmail = "lo_kaba@esi.dz"
-        String toEmail = "lr_soltani@esi.dz"
-        String emailSubject = "Notification Mail"
-        String emailBody = "Hello!! this is the last update"
+     //   String toEmail = "lr_soltani@esi.dz"
+       // String emailSubject = "Notification Mail"
+        //String emailBody = "Hello!! this is the last update"
 
         Properties props = new Properties()
         props.put("mail.smtp.auth", "true")
