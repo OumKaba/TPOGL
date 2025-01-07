@@ -159,7 +159,7 @@ slack {
     }
 }
 
-task sendMail {
+task sendMailCustom {
     doLast {
         // Configuration du serveur SMTP
         String smtpHost = "smtp.gmail.com"
