@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     environment {
-        // Définir les variables d'environnement pour SonarQube et les autres outils si nécessaire
         SONARQUBE_URL = 'http://197.140.142.82:9000/'
-        SONARQUBE_TOKEN = 'token'
+        SONARQUBE_TOKEN = 'token'  // Assurez-vous que le token est valide
         MAVEN_REPO_URL = 'https://mymavenrepo.com/repo/wfeEoJVTqyCrSb3fpohC/'
         MAVEN_REPO_USERNAME = 'myMavenRepo'
         MAVEN_REPO_PASSWORD = '12345678'
@@ -22,14 +21,13 @@ pipeline {
             steps {
                 // Exécuter les tests
                 script {
-                    // Utilisez 'gradlew.bat' pour Windows
                     bat './gradlew test'
                 }
             }
             post {
                 always {
                     // Assurez-vous que le chemin des rapports de test est correct
-                    junit '**/build/test-logs/*.xml'  // Vérifiez le chemin de vos rapports de test
+                    junit '**/build/test-logs/*.xml'  // Vérifiez le chemin des rapports de test
                 }
             }
         }
@@ -88,7 +86,7 @@ pipeline {
                     slackSend (channel: '#notification', message: "Build and deploy completed successfully. Version: ${env.BUILD_TAG}")
 
                     // Envoyer un email en cas de succès
-                    mail to: 'lo_kaba@€ei.dz', subject: "Build Success", body: "The build and deployment have been successfully completed!"
+                    mail to: 'lo_kaba@esi.dz', subject: "Build Success", body: "The build and deployment have been successfully completed!"
                 }
             }
         }
